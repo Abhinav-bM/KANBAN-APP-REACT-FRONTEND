@@ -1,16 +1,9 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice } from "@reduxjs/toolkit";
 import axios from "../../axiosConfig";
 
 const initialState = {
   tasks: [],
 };
-
-export const fetchTasks = createAsyncThunk("kanban/fetchTasks", async () => {
-  const token = localStorage.getItem("token");
-  const response = await axios.post(`/get/tasks`, { token: token });
-  console.log("tasks from backend : ", response);
-  return response.data.data;
-});
 
 const kanbanSlice = createSlice({
   name: "kanban",
@@ -49,12 +42,19 @@ const kanbanSlice = createSlice({
       state.tasks = action.payload;
     },
   },
-  extraReducers: (builder) => {
-    builder.addCase(fetchTasks.fulfilled, (state, action) => {
-      state.tasks = action.payload;
-    });
-  },
 });
+
+export const fetchTasks = () => async (dispatch) => {
+  try {
+    const token = localStorage.getItem("token");
+    const response = await axios.post(`/get/tasks`, { token: token });
+    console.log("tasks from backend : ", response);
+    dispatch(setTasks(response.data.data));
+  } catch (error) {
+    console.error('Failed to fetch tasks:', error);
+  }
+};
 
 export const { addTask, updateTaskStatus, setTasks, editTask, removeTask } = kanbanSlice.actions;
 export default kanbanSlice.reducer;
+
